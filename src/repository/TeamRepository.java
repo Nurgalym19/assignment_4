@@ -13,12 +13,12 @@ import java.util.List;
 public class TeamRepository {
 
     public void create(Team team) {
-        String sql = "INSERT INTO teams(name) VALUES (?)";
+        String sql = "INSERT INTO teams(team_id,name) VALUES (?,?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, team.getName());
+            ps.setInt(1, team.getId());
+            ps.setString(2, team.getName());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -28,7 +28,8 @@ public class TeamRepository {
 
     public List<Team> getAll() {
         List<Team> teams = new ArrayList<>();
-        String sql = "SELECT id, name FROM teams";
+        String sql = "SELECT * FROM teams";
+
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -36,7 +37,7 @@ public class TeamRepository {
 
             while (rs.next()) {
                 Team team = new Team(
-                        rs.getInt("id"),
+                        rs.getInt("team_id"),
                         rs.getString("name")
                 );
                 teams.add(team);

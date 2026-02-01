@@ -1,5 +1,6 @@
 package repository;
 
+
 import model.Player;
 import utils.DatabaseConnection;
 
@@ -30,6 +31,21 @@ public class PlayerRepository {
             throw new RuntimeException(e);
         }
     }
+
+    public void deleteById(int playerId) {
+        String sql = "DELETE FROM players WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, playerId);
+            ps.executeUpdate();
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     public List<Player> getByTeamId(int teamId) {
         List<Player> players = new ArrayList<>();

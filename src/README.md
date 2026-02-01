@@ -1,179 +1,151 @@
-Football Team Management System
+Football Team Management System 
 
-A. Project Overview
+1.Overview
+   Console application for managing football teams and players using Java OOP, SOLID architecture and PostgreSQL (JDBC).
+   Layers:
+- Controller: console menu + input/output
+- Service: business logic
+- Repository: SQL CRUD via JDBC
+- Utils: sorting and reflection tools
 
-Purpose of the API
+2.SOLID Documentation
 
-The purpose of this API is to manage football teams and their players using a Java application connected to a PostgreSQL database.
-The system allows creating teams, adding players, retrieving team lineups, updating player data and handling invalid input using custom exceptions.
+SRP (Single Responsibility)
+- TeamController / PlayerController: UI logic only
+- TeamService / PlayerService: business logic only
+- TeamRepository / PlayerRepository: DB operations only
+- DatabaseConnection: connection management
+- SortingUtils: sorting logic
+- ReflectionUtils: reflection inspection logic
 
-Summary of entities and their relationships
+OCP (Open/Closed)
+- Base classes (BaseEntity, Person) can be extended with new entities (example: Coach) without changing existing logic.
+- New sorting rules can be added by extending SortingUtils methods.
 
-The main entities in the system are Team, Player, Coach and Person.
-A Team can have multiple Players.
-Each Player belongs to exactly one Team.
-Coach represents the team coach and is associated with the team logically.
-Person is a base abstraction for Player and Coach.
+LSP (Liskov Substitution)
+- Player and Coach extend Person and can be used anywhere Person is expected.
+- Overridden methods (printInfo, validate) preserve correct behavior.
 
-OOP design overview
+ISP (Interface Segregation)
+- Small interfaces are used (example: Printable, Validatable) so classes implement only required behaviors.
 
-The project is built using object-oriented programming principles such as abstraction, inheritance, encapsulation and polymorphism.
-A layered architecture is used to separate concerns between models, repositories, services and controllers.
+DIP (Dependency Inversion)
+- Controllers depend on services, not directly on repositories/SQL.
+- Data access is isolated inside repository layer.
 
-B. OOP Design Documentation
+3.Advanced OOP Features
 
-Abstract class and subclasses
+Generics
+- Generic CRUD repository abstraction: CrudRepository<T> (reusable CRUD contract for entities).
 
-Person is an abstract base class that represents a person in the system.
-It contains common fields such as id, name and age, and defines validation behavior.
+Lambdas
+- Sorting implemented using lambda expressions:
+  players.sort((p1, p2) -> Integer.compare(p1.getAge(), p2.getAge()));
 
-Example:
+Reflection
+- ReflectionUtils.inspectClass(Class<?> clazz) prints fields/methods of a class at runtime.
 
-    public abstract class Person {
+Interface default/static methods
+- Interfaces can include default/static helper methods to keep logic reusable without forcing overrides.
 
-    protected int id;
+4.OOP Documentation
 
-     protected String name;
+Abstract class + subclasses
+- BaseEntity (abstract)
+- Person extends BaseEntity
+- Player extends Person
+- Coach extends Person
 
-    protected int age;
+Composition
+- Team has many Players (DB relation via players.team_id foreign key).
 
-    public abstract void validate();
-}
+Polymorphism
+- printInfo() works differently depending on the real object type (Player vs Coach).
+- validate() can be overridden to enforce entity-specific rules.
 
-__
+UML diagram ---  docs--> screenshots --> UML diagram
 
-Player and Coach are subclasses of Person.
+5.Database
 
-    public class Player extends Person {
-
-    private int number;
-
-    private String position;}
-
-    public class Coach extends Person {
-
-    private String role;}
-
-__
-
-Interfaces and implemented methods
-
-Printable interface defines the printInfo method.
-
-Validatable interface defines the validate method.
-
-    public interface Printable {
-    void printInfo();
-    }
-
-    public interface Validatable {
-    void validate();
-    }
-
-These interfaces are implemented by Person and overridden in Player and Coach.
-
-Composition and aggregation
-
-Team has an aggregation relationship with Player.
-A team consists of multiple players, but players are stored independently in the database and linked using a foreign key.
-
---
-
-Polymorphism examples
-
-Polymorphism is demonstrated when a Person reference points to a Player or Coach object.
-
-    Person person = new Player(...);
-    person.validate();
-    person.printInfo();
-
-The correct overridden method is called at runtime.
-
-UML diagram create using draw.io.
-
-The screenshots:docs > screenshots.
-
-C. Database Description
-
-Schema, constraints and foreign keys
-
-The project uses PostgreSQL with two main tables: teams and players.
+Schema
 
     CREATE TABLE teams (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL);
-
+    name VARCHAR(100) NOT NULL
+    );
 
     CREATE TABLE players (
-     id SERIAL PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
-     age INT CHECK (age > 0),
-    number INT CHECK (number BETWEEN 1 AND 99),
-    position VARCHAR(20),
-    team_id INT REFERENCES teams(id) ON DELETE CASCADE);
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    age INT NOT NULL CHECK (age > 0),
+    number INT NOT NULL,
+    position VARCHAR(50) NOT NULL,
+    team_id INT REFERENCES teams(id) ON DELETE CASCADE
+    );
 
-Foreign key constraints ensure that each player belongs to a valid team.
-Cascade delete removes players automatically when a team is deleted.
+Constraints
+- PK: teams.id, players.id
+- FK: players.team_id -> teams.id
+- CHECK: age > 0
+- ON DELETE CASCADE: deletes players when team is deleted
 
-Sample SQL inserts
+Sample Inserts
 
-    INSERT INTO teams (name) VALUES ('Barcelona');
+        INSERT INTO teams(name) VALUES ('Kairat');
+        INSERT INTO players(name, age, number, position, team_id)
+        VALUES ('Dastan', 18, 9, 'St', 2);
 
-    INSERT INTO players (name, age, number, position, team_id)
-    VALUES ('Lamine Yamal', 18, 10, 'RW', 1);
+6.Architecture Explanation
 
-__
+Controllers
+- Handle user requests (menu selection, input parsing)
+- Call service methods
+- Print results/errors
 
-D. Controller
+Services
+- Contain business logic and validations
+- Call repositories for persistence
 
-The controller logic is implemented through the Main class and the service layer.
+Repositories
+- Execute SQL queries using JDBC
+- Map ResultSet -> model objects
 
-Summary of CRUD operations
+Example flow: Show players by teamId
+Controller -> PlayerService -> PlayerRepository -> DB -> returns List<Player> -> Controller prints.
 
-Create
+7.Execution Instructions
 
-    playerRepo.create(new Player(0, "Pedri", 22, 8, "CM"), teamId);
+Requirements
+- Java 17+
+- PostgreSQL
+- JDBC driver
+- IntelliJ IDEA (recommended)
 
-Read
+Run steps
+1.Configure DB credentials in src/utils/DatabaseConnection.java
+2.Run SQL schema in PostgreSQL
+3.Run Main.java
 
-    List<Player> players = playerRepo.getByTeamId(teamId);
+8) All screenshots --- docs-> screenshots
 
-Update
 
-    playerRepo.updateNumber(playerId, 10);
+9) Reflection
 
-Responses are displayed in the console, showing players grouped by positions and formatted in a 4-3-3 formation.
+Learned
+- Building layered architecture (controller/service/repository)
+- Applying SOLID to keep code maintainable
+- JDBC integration with PostgreSQL
+- Using Generics, Lambdas and Reflection in practice
 
-E. Instructions to Compile and Run
+Challenges
+- DB connection and SQL debugging
+- Clean separation of responsibilities
+- Correct input handling and exception management
 
-Requirements:
-Java 17
-PostgreSQL
-IntelliJ IDEA
+Value of SOLID
+- Easier testing and extension
+- Clear structure
+- Less coupling between UI, logic, and database
 
-Example commands:
+Author:Ermek Nurgalym
 
-javac Main.java
-
-java Main
-
-F. Screenshots
-
-The screenshots : docs > screenshots.
-
-G. Reflection Section
-
-What I learned
-
-During this project, I learned how to design a Java application using object-oriented principles and a layered architecture.
-I gained practical experience with JDBC and PostgreSQL integration.
-
-Challenges faced
-
-The main challenge was implementing validation correctly while using inheritance and polymorphism.
-Another challenge was organizing the project structure to keep responsibilities clearly separated.
-
-Benefits of JDBC and multi-layer design
-
-Using JDBC allowed direct interaction with the database and better understanding of SQL operations.
-The multi-layer design improved code readability, maintainability and scalability, and reflects real-world backend development practices.

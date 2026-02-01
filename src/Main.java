@@ -1,58 +1,61 @@
-import model.Player;
-import model.Coach;
+import controller.PlayerController;
+import controller.TeamController;
+
 import repository.PlayerRepository;
+import repository.TeamRepository;
+
+import service.PlayerService;
+import service.TeamService;
+
+import service.interfaces.PlayerServiceInterface;
+import service.interfaces.TeamServiceInterface;
+
+import utils.ReflectionUtils;
+
+import model.Player;
+
+import java.util.Scanner;
 
 public class Main {
 
     public static void main(String[] args) {
-        PlayerRepository playerRepo = new PlayerRepository();
-        int barcelonaId = 1;
-
-        Coach coach = new Coach(1, "Nurgalym Ermek", 18, "Head Coach");
-
-        System.out.println(" FC Barcelona ");
-        coach.printInfo();
-
-        System.out.println("\n=== Formation 4-3-3 ===\n");
 
 
-        System.out.println("Goalkeeper:");
-        for (Player p : playerRepo.getByTeamId(barcelonaId)) {
-            if (p.getPosition().equals("GK")) {
-                printPlayer(p);
+        ReflectionUtils.inspectClass(Player.class);
+
+        TeamRepository teamRepository = new TeamRepository();
+        PlayerRepository playerRepository = new PlayerRepository();
+
+
+        TeamServiceInterface teamService = new TeamService(teamRepository);
+        PlayerServiceInterface playerService = new PlayerService(playerRepository);
+
+
+        TeamController teamController = new TeamController(teamService);
+        PlayerController playerController = new PlayerController(playerService);
+
+
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n=== FOOTBALL TEAM MANAGEMENT SYSTEM ===");
+            System.out.println("1) Team Menu");
+            System.out.println("2) Player Menu");
+            System.out.println("0) Exit");
+
+            System.out.print("Choose: ");
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1" -> teamController.menu();
+                case "2" -> playerController.menu();
+                case "3"-> playerController.menu();
+                case "0" -> {
+                    System.out.println("Bye!");
+                    return;
+                }
+                default -> System.out.println("Invalid choice!");
             }
         }
-
-        System.out.println("\nDefenders:");
-        for (Player p : playerRepo.getByTeamId(barcelonaId)) {
-            if (p.getPosition().equals("RB")
-                    || p.getPosition().equals("CB")
-                    || p.getPosition().equals("LB")) {
-                printPlayer(p);
-            }
-        }
-        System.out.println("\nMidfielders:");
-        for (Player p : playerRepo.getByTeamId(barcelonaId)) {
-            if (p.getPosition().equals("CM")
-                    || p.getPosition().equals("AM")) {
-                printPlayer(p);
-            }
-        }
-        System.out.println("\nAttackers:");
-        for (Player p : playerRepo.getByTeamId(barcelonaId)) {
-            if (p.getPosition().equals("RW")
-                    || p.getPosition().equals("LW")
-                    || p.getPosition().equals("ST")) {
-                printPlayer(p);
-            }
-        }
-    }
-    private static void printPlayer(Player p) {
-        System.out.println(
-                p.getName()
-                        + " | #" + p.getNumber()
-                        + " | " + p.getPosition()
-                        + " | " + p.getAge() + " years"
-        );
     }
 }
